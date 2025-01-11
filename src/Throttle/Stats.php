@@ -66,6 +66,10 @@ class Stats
             \apcu_add($key, $data, 10);
         }
 
+        if (is_bool($data)) {
+            $data = $data ? 'true' : 'false';
+        }
+
         return new \Symfony\Component\HttpFoundation\Response($data, 200, array(
             'Content-Type' => 'text/plain',
             'Access-Control-Allow-Origin' => '*',
