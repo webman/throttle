@@ -10,7 +10,8 @@ if (!is_array($base)) {
 }
 
 return array_merge($base, array(
-    'debug' => false,
+    'debug' => true,
+
     'maintenance' => false,
     'show-version' => true,
 
