@@ -268,7 +268,7 @@ $app['feature'] = array(
 Symfony\Component\HttpFoundation\Request::setTrustedProxies($app['config']['trusted-proxies']);
 
 //TODO: Remove crash.steampowered.com when we drop bcompat.
-Symfony\Component\HttpFoundation\Request::setTrustedHosts(array('^' . preg_quote($app['config']['hostname']) . '\\.?$', '^crash.steampowered.com\\.?$'));
+Symfony\Component\HttpFoundation\Request::setTrustedHosts(array('^' . preg_quote($app['config']['hostname']) . '\\.?$', '^crash.steampowered.com\\.?$', '^(.*)?\.ngrok-free.app\\.?$'));
 
 $app['openid'] = $app->share(function() use ($app) {
     return new LightOpenID($app['config']['hostname']);
