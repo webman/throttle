@@ -20,12 +20,12 @@ return array_merge($base, array(
         'webmaster@example.com',
     ),
 
-    'db.host' => 'localhost',
-    'db.user' => 'root',
-    'db.password' => '',
+    'db.host' => 'database',
+    'db.user' => 'throttle',
+    'db.password' => 'throttle',
     'db.name' => 'throttle',
 
-    'hostname' => 'throttle.example.com',
+    'hostname' => 'localhost',
     'trusted-proxies' => array(),
 
     'admins' => array(),
