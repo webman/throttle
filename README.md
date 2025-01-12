@@ -1,36 +1,14 @@
-## Install Instructions
-    curl -sS https://getcomposer.org/installer | php
-    php composer.phar create-project --keep-vcs -s dev asherkin/throttle
-    cd throttle
-    cp app/config.base.php app/config.php
-    vim app/config.php
-    php app/console.php migrations:migrate
-    chmod -R a+w logs cache dumps symbols/public
+## About
+The purpose of the current fork are dockerizing app [asherkin/throttle](https://github.com/asherkin/throttle) and adapt for local usage. Pay attention, it should not be used in production.
 
-## Update Instructions
-    cd throttle
-    git pull
-    php ../composer.phar install
-    php app/console.php migrations:migrate
-    rm -rf cache/*
+Dockerized app is part of another project [throttle-dockerized](https://github.com/webman/throttle-dockerized). For more information, see details there.
 
-## Virtual Host Configuration
-    <VirtualHost *:80>
-        ServerName throttle.example.com
-        DocumentRoot "/path/to/throttle/web"
+## Changes
+- Fixed application bootstrap with broken library `phacility/libphutil`
+- Added ngrok free urls to trusted hosts
+- Replaced credentials for usage with another docker containers
+- Enabled debugging
+- Removed authorization checks for fast local usage experience
 
-        <Location />
-            Options -MultiViews
-
-            RewriteEngine On
-            RewriteCond %{REQUEST_FILENAME} !-f
-            RewriteRule ^ index.php [QSA,L]
-        </Location>
-    </VirtualHost>
-
-## Cron
-    * * * * * root /var/www/throttle/app/console.php crash:clean > /dev/null; /var/www/throttle/app/console.php crash:process -l 250 -u > /dev/null
-    0 * * * * root /var/www/throttle/app/console.php user:update > /dev/null
-    15 */3 * * * root /var/www/throttle/app/console.php symbols:update > /dev/null
-    30 0 * * * root /var/www/throttle/app/console.php symbols:download > /dev/null
-    30 0 * * * root /var/www/throttle/app/console.php symbols:mozilla:download > /dev/null
+## Credits
+- [asherkin](https://github.com/asherkin/)
