@@ -66,10 +66,22 @@ RUN touch /var/log/cron.log && chmod 0644 /var/log/cron.log /etc/cron.d/cron-job
 RUN crontab /etc/cron.d/cron-jobs
 
 COPY --from=composer:1 /usr/bin/composer /usr/bin/composer
-WORKDIR /var/www/throttle
+WORKDIR /var/www/
 
+RUN git clone https://github.com/webman/throttle.git
+WORKDIR /var/www/throttle
+RUN composer install --optimize-autoloader
+
+# Rollback phacility/libphutil dependency to working version (thanks to West14)
+WORKDIR /var/www/throttle/vendor/phacility/libphutil
+RUN git reset --hard 39ed96cd818aae761ec92613a9ba0800824d0ab0
+
+WORKDIR /var/www/throttle
+COPY app/config.base.php app/config.php
 RUN chown -R www-data:www-data . \
+    && chmod -R a+w logs cache dumps symbols/public \
     && rm /etc/php/5.6/fpm/php-fpm.conf
 
+USER www-data
 EXPOSE 9000
 CMD ["/usr/bin/supervisord"]
