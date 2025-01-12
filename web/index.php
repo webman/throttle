@@ -311,9 +311,7 @@ $app->get('/submit', function() use ($app) {
     ));
 });
 
-$app->get('/dashboard/{offset}', 'Throttle\Crash::dashboard')
-    ->assert('offset', '[0-9]+')
-    ->value('offset', null)
+$app->get('/dashboard', 'Throttle\Crash::dashboard')
     ->bind('dashboard');
 
 $app->get('/stats/today', 'Throttle\Stats::today')

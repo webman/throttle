@@ -3,31 +3,16 @@
 {% set supports_mobile = true %}
 
 {% block content %}
-{% if not crash.owner %}
-{% if app.config.accelerator %}
-<div class="alert alert-block alert-info">This crash was submitted anonymously. If you are the owner, please configure Accelerator with your Steam ID.</div>
-{% endif %}
-{% else %}
-{% if not app.user %}
-<div class="alert alert-block alert-info">If you are the owner of this crash, <a href="{{ path('login', {'return': app.request.pathInfo}) }}" class="alert-link">login</a> to see more information.</div>
-{% elseif not can_manage %}
-<div class="alert alert-block alert-info">You can not see full information about this crash as you are not the owner.</div>
-{% endif %}
-{% endif %}
-
 <div class="well" style="position: relative;">
     <dl class="dl-horizontal" style="margin: 0;">
         <dt>Uploaded</dt>
         <dd>{{ crash.timestamp|date }}</dd>
-{% if can_manage %}
 {% if crash.ip %}
 	<dt>Upload IP</dt>
 	<dd>{{ crash.ip }}</dd>
 {% endif %}
-{% if can_manage and crash.owner and crash.owner != app.user.id %}
     <dt>Owner</dt>
     <dd><a  href="{{ path('dashboard', {'user': crash.owner}) }}">{{ crash.name ?? crash.owner }}</a></dd>
-{% endif %}
 {% if crash.cmdline %}
         <dt>Command Line</dt>
         <dd>{{ crash.cmdline }}</dd>
@@ -40,7 +25,6 @@
         <dd>&nbsp;</dd>
 {% endif %}
 {% endfor %}
-{% endif %}
     </dl>
 {% if app.feature.subscriptions %}
     <a class="supporter-tag" href="{{ path('subscribe') }}" data-toggle="tooltip" data-container="body" data-placement="bottom" title="The owner of the server that submitted this crash dump contributes money to support the hosting and development of this service."><i class="icon-usd"></i> Supporter</a>
@@ -70,7 +54,7 @@
 <div class="alert alert-block alert-info">This crash is not from the main thread.<br>The stack trace displayed below is of the thread that crashed.</div>
 {% endif %}
 
-{% if has_error_string and can_manage %}
+{% if has_error_string %}
 <div id="error-details" class="alert alert-block alert-warning"><i class="icon-cog icon-spin"></i></div>
 {% endif %}
 
@@ -87,7 +71,6 @@
 </div>
 {% endif %}
 
-{% if can_manage %}
 <div class="well clearfix">
     <a class="btn btn-primary" href="{{ path('download', {'id': crash.id}) }}"><i class="icon-download"></i> Download Minidump</a>
 {% if crash.has_console_log %}
@@ -95,7 +78,7 @@
 {% endif %}
     <div class="pull-right">
         <a class="btn btn-default" href="{{ path('carburetor', {'id': crash.id}) }}"><i class="icon-eye-open"></i> View Raw</a>
-{% if app.user.admin and crash.processed == 1 %}
+{% if crash.processed == 1 %}
         {# <a class="btn btn-default" href="{{ path('logs', {id: crash.id}) }}"><i class="icon-cogs"></i> View Processing Logs</a> #}
         <form action="{{ path('reprocess', {id: crash.id, return: app.request.pathInfo}) }}" method="post" class="button-form">
             <button type="submit" class="btn btn-default"><i class="icon-refresh"></i> Reprocess</button>
@@ -106,7 +89,6 @@
         </form>
     </div>
 </div>
-{% endif %}
 
 {% if crash.processed == 1 and crash.failed == 0 %}
 <h2>Stack Trace</h2>
@@ -142,7 +124,7 @@
     </table>
 </div>
 
-{% if modules|length > 0 and can_manage %}
+{% if modules|length > 0 %}
 <h2>Modules</h2>
 <div class="well well-tight">
     <table class="table table-modules table-shown">

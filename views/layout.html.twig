@@ -20,16 +20,10 @@
             <div class="container">
                 <a class="navbar-brand" href="/"><i class="icon-dashboard"></i> Throttle</a>
                 <div class="pull-right">
-{% if app.user %}
 <ul class="nav navbar-nav">
-    <li class="dropdown {% if app.user.pending > 0 %}pending-notifications{% endif %}">
+    <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-{% if app.user.name %}
-            <img src="{{ app.user.avatar }}" alt="{{ app.user.name }}'s avatar">
-{% else %}
             Account
-{% endif %}
-            <!-- {{ app.user.id }} -->
             <b class="caret"></b>
         </a>
         <ul class="dropdown-menu pull-right">
@@ -40,18 +34,9 @@
             <li class="alert-warning" data-toggle="tooltip" data-container="body" data-placement="left" title="Subscription cancelled, access expires 2017-10-29"><a href="{{ path('subscribe') }}"><i class="icon-fixed-width icon-usd"></i> 2&#8239;/&#8239;month</a></li>
             <li class="alert-danger" data-toggle="tooltip" data-container="body" data-placement="left" title="Last payment failed, check payment method"><a href="{{ path('subscribe') }}"><i class="icon-fixed-width icon-usd"></i> 2&#8239;/&#8239;month</a></li>
 {% endif %}
-            <li {% if app.user.pending > 0 %}class="pending-notifications"{% endif %}><a href="{{ path('share') }}"><i class="icon-fixed-width icon-inbox"></i> Sharing</a></li>
-{% if logout_to_index|default(false) %}
-            <li><a href="{{ path('logout') }}"><i class="icon-fixed-width icon-signout"></i> Logout</a></li>
-{% else %}
-            <li><a href="{{ path('logout', {'return': app.request.pathInfo}) }}"><i class="icon-fixed-width icon-signout"></i> Logout</a></li>
-{% endif %}
         </ul>
     </li>
 </ul>
-{% else %}
-                    <a href="{{ path('login', {'return': app.request.pathInfo}) }}" class="btn btn-success navbar-btn"><i class="icon-signin"></i> Login</a>
-{% endif %}
                 </div>
             </div>
         </div>

@@ -22,32 +22,6 @@ class Crash
         throw new \Exception('MINIDUMP COLLISION');
     }
 
-    private static function canUserManage($app, $crash)
-    {
-        if (!$app['user'] || $app['user']['admin']) {
-            // Hacky, but execute a query to check if the crash doesn't exist at all.
-            $query = $app['db']->executeQuery('SELECT 1 FROM crash WHERE crash.id = ?', [$crash])->fetchColumn(0);
-
-            return ($query === false) ? null : !!$app['user']['admin'];
-        }
-
-        $query = $app['db']->executeQuery('SELECT COALESCE(crash.owner = ? OR EXISTS (SELECT TRUE FROM share WHERE share.owner = crash.owner AND share.user = ?), 0) AS manage FROM crash WHERE crash.id = ?', [$app['user']['id'], $app['user']['id'], $crash])->fetchColumn(0);
-
-        if ($query === false) {
-            return null;
-        }
-
-        if ($query === '1') {
-            return true;
-        }
-
-        if ($query === '0') {
-            return false;
-        }
-
-        throw new \Exception('Bad query return in '.__FUNCTION__);
-    }
-
     public static function parsePresubmitSignature($signature)
     {
         $signature = array_reverse(explode('|', $signature));
@@ -324,17 +298,6 @@ class Crash
 
     public function details(Application $app, $id)
     {
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            if ($app['session']->getFlashBag()->get('internal')) {
-                $app['session']->getFlashBag()->add('error_crash', 'That Crash ID does not exist.');
-
-                return $app->redirect($app['url_generator']->generate('index'));
-            }
-
-            return $app->abort(404);
-        }
-
         $crash = $app['db']->executeQuery('SELECT crash.id, UNIX_TIMESTAMP(crash.timestamp) AS timestamp, INET6_NTOA(ip) AS ip, owner, metadata, cmdline, thread, processed, failed, stackhash, UNIX_TIMESTAMP(crash.lastview) AS lastview, user.name FROM crash LEFT JOIN user ON user.id = crash.owner WHERE crash.id = ?', array($id))->fetch();
 
         if ($crash['lastview'] === null || (time() - $crash['lastview']) > (60 * 60 * 24)) {
@@ -397,7 +360,6 @@ class Crash
 
         return $app['twig']->render('details.html.twig', array(
             'crash' => $crash,
-            'can_manage' => $can_manage,
             'notices' => $notices,
             'stack' => $stack,
             'modules' => $modules,
@@ -410,19 +372,6 @@ class Crash
 
     public function download(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $path = $app['root'] . '/dumps/' . substr($id, 0, 2) . '/' . $id . '.dmp';
 
         if (!\Filesystem::pathExists($path)) {
@@ -434,37 +383,11 @@ class Crash
 
     public function view(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         return $app['twig']->render('view.html.twig', array('id' => $id));
     }
 
     public function logs(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $path = $app['root'] . '/dumps/' . substr($id, 0, 2) . '/' . $id . '.txt';
 
         $logs = null;
@@ -479,19 +402,6 @@ class Crash
 
     public function metadata(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $path = $app['root'] . '/dumps/' . substr($id, 0, 2) . '/' . $id . '.meta.txt';
 
         $logs = null;
@@ -506,19 +416,6 @@ class Crash
 
     public function console(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $path = $app['root'] . '/dumps/' . substr($id, 0, 2) . '/' . $id . '.meta.txt';
 
         $metadata = null;
@@ -549,19 +446,6 @@ class Crash
 
     public function error(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $path = $app['root'] . '/dumps/' . substr($id, 0, 2) . '/' . $id . '.dmp';
 
         if (!\Filesystem::pathExists($path)) {
@@ -634,19 +518,6 @@ class Crash
 
     public function carburetor(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         return $app['twig']->render('carburetor.html.twig', array(
             'id' => $id,
             'scan' => $app['request']->get('scan', null),
@@ -656,19 +527,6 @@ class Crash
 
     public function carburetor_data(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $options = [];
         if ($app['request']->get('scan', null) === 'no') {
             $options[] = '--no-scan';
@@ -700,14 +558,6 @@ class Crash
 
     public function reprocess(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        if (!$app['user']['admin']) {
-            $app->abort(403);
-        }
-
         $app['db']->transactional(function($db) use ($id) {
             $db->executeUpdate('DELETE FROM frame WHERE crash = ?', array($id));
             $db->executeUpdate('DELETE FROM module WHERE crash = ?', array($id));
@@ -726,19 +576,6 @@ class Crash
 
     public function delete(Application $app, $id)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $can_manage = self::canUserManage($app, $id);
-        if ($can_manage === null) {
-            $app->abort(404);
-        }
-
-        if (!$can_manage) {
-            $app->abort(403);
-        }
-
         $app['db']->executeUpdate('DELETE FROM crash WHERE id = ?', array($id));
 
         $return = $app['request']->get('return', null);
@@ -749,70 +586,11 @@ class Crash
         return $app->redirect($return);
     }
 
-    public function dashboard(Application $app, $offset)
+    public function dashboard(Application $app)
     {
-        if ($app['user'] === null) {
-            $app->abort(401);
-        }
-
-        $shared = $app['db']->executeQuery('SELECT share.owner AS id, user.name, user.avatar FROM share LEFT JOIN user ON share.owner = user.id WHERE share.user = ? AND accepted IS NOT NULL ORDER BY accepted ASC', array($app['user']['id']))->fetchAll();
-
-        array_unshift($shared, [
-            'id' => $app['user']['id'],
-            'name' => $app['user']['name'],
-            'avatar' => $app['user']['avatar'],
-        ]);
-
-        $userid = $app['request']->get('user', null);
-
-        $allowed = null;
-        if (!$app['user']['admin']) {
-            foreach ($shared as $user) {
-                $allowed[] = $user['id'];
-            }
-
-            if ($userid !== null && !in_array($userid, $allowed, true)) {
-                $app->abort(403);
-            }
-        }
-
-        $where = '';
-        $params = [];
-        $types = [];
-
-        if ($offset !== null || $userid !== null || $allowed !== null) {
-            $where .= 'WHERE ';
-
-
-            if ($userid !== null || $allowed !== null) {
-                if ($userid !== null) {
-                    $where .= 'owner = ?';
-                    $params[] = $userid;
-                    $types[] = \PDO::PARAM_INT;
-                } else if ($allowed !== null) {
-                    $where .= 'owner IN (?)';
-                    $params[] = $allowed;
-                    $types[] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
-                }
-
-                if ($offset !== null) {
-                    $where .= ' AND ';
-                }
-            }
-
-            if ($offset !== null) {
-                $where .= 'timestamp < FROM_UNIXTIME(?)';
-                $params[] = $offset;
-                $types[] = \PDO::PARAM_INT;
-            }
-        }
-
-        $crashes = $app['db']->executeQuery('SELECT crash.id, UNIX_TIMESTAMP(crash.timestamp) as timestamp, crash.owner, crash.cmdline, crash.processed, crash.failed, user.name, user.avatar, frame.module, frame.rendered, frame2.module as module2, frame2.rendered AS rendered2, (SELECT CONCAT(COUNT(*), \'-\', MIN(notice.severity)) FROM crashnotice JOIN notice ON crashnotice.notice = notice.id WHERE crashnotice.crash = crash.id) AS notice FROM crash LEFT JOIN user ON crash.owner = user.id LEFT JOIN frame ON crash.id = frame.crash AND crash.thread = frame.thread AND frame.frame = 0 LEFT JOIN frame AS frame2 ON crash.id = frame2.crash AND crash.thread = frame2.thread AND frame2.frame = 1 ' . $where . ' ORDER BY crash.timestamp DESC LIMIT 20', $params, $types)->fetchAll();
+        $crashes = $app['db']->executeQuery('SELECT crash.id, UNIX_TIMESTAMP(crash.timestamp) as timestamp, crash.owner, crash.cmdline, crash.processed, crash.failed, user.name, user.avatar, frame.module, frame.rendered, frame2.module as module2, frame2.rendered AS rendered2, (SELECT CONCAT(COUNT(*), \'-\', MIN(notice.severity)) FROM crashnotice JOIN notice ON crashnotice.notice = notice.id WHERE crashnotice.crash = crash.id) AS notice FROM crash LEFT JOIN user ON crash.owner = user.id LEFT JOIN frame ON crash.id = frame.crash AND crash.thread = frame.thread AND frame.frame = 0 LEFT JOIN frame AS frame2 ON crash.id = frame2.crash AND crash.thread = frame2.thread AND frame2.frame = 1 ORDER BY crash.timestamp')->fetchAll();
 
         return $app['twig']->render('dashboard.html.twig', array(
-            'userid' => $userid,
-            'shared' => $shared,
-            'offset' => $offset,
             'crashes' => $crashes,
         ));
     }
