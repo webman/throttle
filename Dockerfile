@@ -55,12 +55,12 @@ RUN set -e \
     && phpenmod apcu redis \
     && pecl clear-cache
 
-RUN echo "* * * * * root /var/www/throttle/app/console.php crash:clean >> /var/log/cron.log 2>&1; /var/www/throttle/app/console.php crash:process -l 250 -u >> /var/log/cron.log 2>&1" > /etc/cron.d/cron-jobs \
-    && echo "0 * * * * root /var/www/throttle/app/console.php user:update >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
-    && echo "15 */3 * * * root /var/www/throttle/app/console.php symbols:update >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
-    && echo "30 0 * * * root /var/www/throttle/app/console.php symbols:download >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
-    && echo "30 0 * * * root /var/www/throttle/app/console.php symbols:mozilla:download >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
-    && echo "0 0 * * * root truncate -s 0 /var/log/cron.log" >> /etc/cron.d/cron-jobs
+RUN echo "* * * * * www-data /var/www/throttle/app/console.php crash:clean >> /var/log/cron.log 2>&1; /var/www/throttle/app/console.php crash:process -l 250 -u >> /var/log/cron.log 2>&1" > /etc/cron.d/cron-jobs \
+    && echo "0 * * * * www-data /var/www/throttle/app/console.php user:update >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
+    && echo "15 */3 * * * www-data /var/www/throttle/app/console.php symbols:update >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
+    && echo "30 0 * * * www-data /var/www/throttle/app/console.php symbols:download >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
+    && echo "30 0 * * * www-data /var/www/throttle/app/console.php symbols:mozilla:download >> /var/log/cron.log 2>&1" >> /etc/cron.d/cron-jobs \
+    && echo "0 0 * * * www-data truncate -s 0 /var/log/cron.log" >> /etc/cron.d/cron-jobs
 
 RUN touch /var/log/cron.log && chmod 0644 /var/log/cron.log /etc/cron.d/cron-jobs
 RUN crontab /etc/cron.d/cron-jobs
@@ -78,10 +78,10 @@ RUN git reset --hard 39ed96cd818aae761ec92613a9ba0800824d0ab0
 
 WORKDIR /var/www/throttle
 COPY app/config.base.php app/config.php
-RUN chown -R www-data:www-data . \
+RUN touch /var/www/throttle/logs/main.log \
+    && chown -R www-data:www-data . \
     && chmod -R a+w logs cache dumps symbols/public \
     && rm /etc/php/5.6/fpm/php-fpm.conf
 
-USER www-data
 EXPOSE 9000
 CMD ["/usr/bin/supervisord"]
